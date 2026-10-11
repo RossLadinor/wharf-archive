@@ -19,8 +19,8 @@ Get the latest version from the **[Releases page](https://github.com/RossLadinor
 |---|---|
 | Mac with Apple Silicon (M1, M2, M3, M4) | `Wharf-Archive-<version>-mac-arm64.dmg` |
 | Mac with an Intel processor | `Wharf-Archive-<version>-mac-x64.dmg` |
-| Windows 10/11 (recommended) | `Wharf-Archive-<version>-win-x64-Setup.exe` |
-| Windows, no installation (USB stick, locked-down PC) | `Wharf-Archive-<version>-win-x64-Portable.exe` |
+| Windows 10/11 | `Wharf-Archive-<version>-win-x64-Setup.exe` |
+| Windows, no installation | `Wharf-Archive-<version>-win-x64-Portable.exe` |
 
 > **Not sure which Mac you have?** Apple menu → **About This Mac**. If the "Chip" line
 > says *Apple M…*, choose **arm64**; if it shows a "Processor" line with *Intel*, choose **x64**.
@@ -47,8 +47,7 @@ You only need to do this once. After that, the app opens normally.
 2. If you see **"Windows protected your PC"** (SmartScreen), click **More info → Run anyway**.
 3. Choose an install folder. The installer creates Desktop and Start Menu shortcuts.
 
-The **Portable** `.exe` needs no installation. Just double-click it (the same
-SmartScreen step applies).
+The **Portable** `.exe` needs no installation.
 
 ### Updating
 
@@ -103,11 +102,6 @@ packaging installers, and troubleshooting.
 | [docs/RELEASING.md](docs/RELEASING.md) | Publishing a new version to GitHub Releases |
 | [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) | Architecture, data model, sync protocol, IPC contract, invariants |
 | [CHANGELOG.md](CHANGELOG.md) | What changed in each version |
-
-## Reporting problems
-
-Open an [issue](https://github.com/RossLadinor/wharf-archive/issues/new/choose) and include your
-OS (macOS / Windows and version) and the Wharf Archive version (it's in the name of the file you downloaded).
 
 ## License
 
