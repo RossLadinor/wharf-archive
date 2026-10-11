@@ -80,6 +80,9 @@ jobs:
           else
             export CSC_LINK="$WIN_CSC_LINK" CSC_KEY_PASSWORD="$WIN_CSC_KEY_PASSWORD"
           fi
+          # electron-builder also reads WIN_CSC_* itself and treats an empty value as a
+          # bad path, so only CSC_* may remain set.
+          unset MAC_CSC_LINK MAC_CSC_KEY_PASSWORD WIN_CSC_LINK WIN_CSC_KEY_PASSWORD
           if [ -z "$CSC_LINK" ]; then
             echo "No signing certificate configured; building unsigned."
             export CSC_IDENTITY_AUTO_DISCOVERY=false
