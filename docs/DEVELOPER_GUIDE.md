@@ -814,8 +814,9 @@ These are bug-driven rules. Breaking them causes user-visible regressions.
 ## 12. Build & run
 
 ```bash
-# Install
-npm install
+# Install (same on macOS and Windows; see BUILDING.md for why --ignore-scripts)
+npm install --ignore-scripts
+npm run setup              # Electron binary + prebuilt better-sqlite3 for Electron
 
 # Dev (electron-vite hot reload)
 npm run dev

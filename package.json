@@ -14,6 +14,7 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
+    "setup": "node node_modules/electron/install.js && npm run rebuild",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "generate-icon": "node scripts/generate-icon.js",
     "package": "node scripts/generate-icon.js && electron-vite build && electron-builder"

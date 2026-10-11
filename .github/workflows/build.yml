@@ -60,8 +60,11 @@ jobs:
             exit 1
           fi
 
+      # --ignore-scripts skips compiling better-sqlite3 for plain Node (no prebuilt
+      # binary for Node 22 on Windows, and node-gyp can't use VS 2026). electron-builder
+      # installs the prebuilt Electron binary of better-sqlite3 during Package anyway.
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Package
         shell: bash

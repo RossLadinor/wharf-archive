@@ -87,7 +87,8 @@ WharfArchive/
 ```bash
 git clone https://github.com/RossLadinor/wharf-archive.git
 cd wharf-archive
-npm install
+npm install --ignore-scripts
+npm run setup
 npm run dev
 ```
 
