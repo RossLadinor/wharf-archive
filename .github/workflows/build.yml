@@ -1,0 +1,131 @@
+name: Build & Release
+
+# - Every push to main and every pull request: build macOS + Windows and keep
+#   the installers as workflow artifacts (downloadable from the run page).
+# - Pushing a tag like v1.6.1: same builds, then a DRAFT GitHub Release is
+#   created with all installers attached. Review it and click "Publish".
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+            platform: --mac
+            artifacts: |
+              dist/*.dmg
+              dist/*.zip
+          - name: Windows
+            os: windows-latest
+            platform: --win
+            artifacts: |
+              dist/*.exe
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check tag matches package.json version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          PKG="v$(node -p "require('./package.json').version")"
+          if [ "$PKG" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $PKG"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Package
+        shell: bash
+        env:
+          # Optional code signing (see docs/RELEASING.md). Leave unset to build unsigned.
+          MAC_CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          MAC_CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: |
+          if [ "${{ matrix.name }}" = "macOS" ]; then
+            export CSC_LINK="$MAC_CSC_LINK" CSC_KEY_PASSWORD="$MAC_CSC_KEY_PASSWORD"
+          else
+            export CSC_LINK="$WIN_CSC_LINK" CSC_KEY_PASSWORD="$WIN_CSC_KEY_PASSWORD"
+          fi
+          if [ -z "$CSC_LINK" ]; then
+            echo "No signing certificate configured; building unsigned."
+            export CSC_IDENTITY_AUTO_DISCOVERY=false
+            unset CSC_LINK CSC_KEY_PASSWORD
+          fi
+          npm run package -- ${{ matrix.platform }} --publish never
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wharf-archive-${{ matrix.name }}
+          path: ${{ matrix.artifacts }}
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Draft GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Read version from tag
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate checksums
+        working-directory: release
+        run: sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: release/*
+          body: |
+            ## Downloads
+
+            | Platform | File |
+            |---|---|
+            | **macOS – Apple Silicon** (M1/M2/M3/M4) | `Wharf-Archive-${{ steps.ver.outputs.version }}-mac-arm64.dmg` |
+            | **macOS – Intel** | `Wharf-Archive-${{ steps.ver.outputs.version }}-mac-x64.dmg` |
+            | **Windows – Installer** | `Wharf-Archive-${{ steps.ver.outputs.version }}-win-x64-Setup.exe` |
+            | **Windows – Portable** (no install) | `Wharf-Archive-${{ steps.ver.outputs.version }}-win-x64-Portable.exe` |
+
+            The builds are not code-signed yet. The first time you open the app, you'll see a security prompt.
+            See [Installing](https://github.com/${{ github.repository }}#installing) for how to open it.

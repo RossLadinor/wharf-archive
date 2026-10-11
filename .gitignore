@@ -1,0 +1,12 @@
+node_modules/
+out/
+dist/
+*.log
+credentials.json
+tokens.json
+.env
+
+# OS clutter
+.DS_Store
+Thumbs.db
+desktop.ini
